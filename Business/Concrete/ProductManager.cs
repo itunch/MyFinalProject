@@ -1,8 +1,10 @@
 ﻿using Business.Abstract;
+using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
 using Core.CrossCuttingConcerns.Validation;
+using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using DataAccess.Concrete.InMemory;
@@ -21,21 +23,34 @@ namespace Business.Concrete
     public class ProductManager : IProductService
     {
         IProductDal _productDal;
+        ICategoryService _categoryService;
 
-        public ProductManager(IProductDal productDal)
+
+        public ProductManager(IProductDal productDal, ICategoryService categoryService)
         {
             _productDal = productDal;
+            _categoryService = categoryService;
         }
+
 
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
-            //iş kodları buraya yazılır(productmanager)
-            //business codes            
+
+            //business codes 
+            IResult result = BusinessRules.Run(CheckIfProductNameExist(product.ProductName)
+                , CheckIfProductCountOfCategoryCorrect(product.CategoryId)
+                , CheckIfCategoryLimitExceded());
+
+            if (result != null)
+            {
+                return result;
+            }
 
             _productDal.Add(product);
 
             return new SuccessResult(Messages.ProductAdded);
+
         }
 
         public IDataResult<List<Product>> GetAll()
@@ -76,6 +91,50 @@ namespace Business.Concrete
             }
         }
 
+        [ValidationAspect(typeof(ProductValidator))]
+        public IResult Update(Product product)
+        {
+            //business codes 
 
+            if (CheckIfProductCountOfCategoryCorrect(product.CategoryId).Success)
+            {
+                _productDal.Update(product);
+
+                return new SuccessResult(Messages.ProductUpdated);
+            }
+
+            return new ErrorResult();
+
+        }
+
+        private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
+        {
+            var categoryCount = _productDal.GetAll(p => p.CategoryId == categoryId).Count;
+            if (categoryCount >= 15)
+            {
+                return new ErrorResult(Messages.ProductCountOfCategoryError);
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfProductNameExist(string productName)
+        {
+            var nameExist = _productDal.GetAll(p => p.ProductName == productName).Any();
+            if (nameExist)
+            {
+                return new ErrorResult(Messages.ProductNameExist);
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfCategoryLimitExceded()
+        {
+            var result = _categoryService.GetAll();
+            if (result.Data.Count > 15)
+            {
+                return new ErrorResult(Messages.CategoryLimitExceded);
+            }
+            return new SuccessResult();
+        }
     }
 }

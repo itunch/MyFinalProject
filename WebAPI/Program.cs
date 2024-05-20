@@ -11,6 +11,8 @@ using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Core.Extensions;
+using Core.DependencyResolvers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,7 @@ builder.Services.AddControllers();
 //builder.Services.AddSingleton<IProductService,ProductManager>();
 //builder.Services.AddSingleton<IProductDal,EfProductDal>();
 
-builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
 
 var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
@@ -39,7 +41,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
         };
     });
-ServiceTool.Create(builder.Services);
+
+builder.Services.AddDependencyResolvers(new ICoreModule[]
+{
+    new CoreModule()
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

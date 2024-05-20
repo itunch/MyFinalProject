@@ -54,6 +54,7 @@ namespace Business.Concrete
 
         }
 
+        //[CacheAspect] //cachelemek istedimiz datayı key, value değeri le tutuyoruz
         public IDataResult<List<Product>> GetAll()
         {
             //iş kodları

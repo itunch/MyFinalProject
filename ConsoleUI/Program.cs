@@ -2,7 +2,7 @@
 using DataAccess.Concrete.EntityFramework;
 using DataAccess.Concrete.InMemory;
 
-ProductTest();
+//ProductTest();
 
 //CategoryTest();
 

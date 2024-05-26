@@ -18,13 +18,14 @@ namespace WebAPI.Controllers
         {
             _productService = productService;
         }
-
+       
         [HttpGet("getall")]
         public IActionResult GetAll()
         {
+            Thread.Sleep(1000);
             //Dependency chain
             var result = _productService.GetAll();
-            if(result.Success)
+            if (result.Success)
             {
                 return Ok(result);
             }
@@ -34,7 +35,18 @@ namespace WebAPI.Controllers
         [HttpGet("getbyid")]
         public IActionResult GetById(int id)
         {
-            var result=_productService.GetById(id);
+            var result = _productService.GetById(id);
+            if (result.Success)
+            {
+                return Ok(result.Data);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpGet("getbycategory")]
+        public IActionResult GetByCategory(int categoryId)
+        {
+            var result = _productService.GetAllByCategoryId(categoryId);
             if (result.Success)
             {
                 return Ok(result.Data);
@@ -46,7 +58,7 @@ namespace WebAPI.Controllers
         public IActionResult Add(Product product)
         {
             var result = _productService.Add(product);
-            if(result.Success)
+            if (result.Success)
             {
                 return Ok(result);
             }
